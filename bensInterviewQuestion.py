@@ -14,7 +14,7 @@ from random      import choice
 from time        import sleep
 
 
-def logLineGenerator(n: int):
+def generateLogLines(n: int):
     """Returns generator yielding log lines with format:
     timestamp : user : endpoint : method : statuscode
     
@@ -115,7 +115,7 @@ def getEndpointData(log: list, *, delim: str) -> tuple:
 def main():
     print('Generating log lines...')
     
-    log = logLineGenerator(1000)
+    log = generateLogLines(1000)
     
     print('Parsing log...')
     
