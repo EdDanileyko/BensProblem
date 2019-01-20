@@ -95,7 +95,7 @@ def getEndpointData(log: list, *, seqlen: int, delim: str) -> tuple:
                   .format(str(num), type(line).__name__, str(line)))
             continue
             
-        #print('Parsing - {0}'.format(line))
+        print('Parsing - {0}'.format(line))
         rec = Record(*line.split(delim))
         
         if userEndpoints.get(rec.user) is None:
