@@ -15,8 +15,8 @@ from time        import sleep
 
 
 def logLineGenerator(n: int):
-    """Returns generator yielding logs with "timestamp : user : endpoint" per
-    line to microsecond precision
+    """Returns generator yielding log lines with format:
+    timestamp : user : endpoint : method : statuscode
     
     args:
         int n - number of log lines to generate
