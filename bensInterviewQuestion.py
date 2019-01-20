@@ -64,8 +64,7 @@ def getEndpointData(log: list, *, delim: str) -> tuple:
         2. The {endpoint: visitCount} dict
         3. The tuple(three endpoints) visited the most frequently in sequence.
         
-    >>> x = getEndpointTriplesDictAndMaxTriple(log)
-    >>> userEndpointTrails, endpointTripleCounts, maxEndpointTriple = x
+    >>> userEndpoints, tripleCounts, maxTriple = getEndpointData(log, delim=' : ')
     """
     if not isinstance(log, (list, tuple, types.GeneratorType)):
         raise TypeError('Requires that input be sequence type to initialize')
@@ -120,8 +119,7 @@ def main():
     
     print('Parsing log...')
     
-    returnVals = getEndpointData(log, delim=' : ')
-    endpoints, triples, maxTriple = returnVals
+    userEndpoints, triples, maxTriple = getEndpointData(log, delim=' : ')
     
     if maxTriple is None:
         print('Failure to parse logfile')
@@ -131,8 +129,8 @@ def main():
           .format(str(triples[maxTriple])))
     print(' -> '.join(maxTriple))
     
-    return endpoints, triples, maxTriple
+    return userEndpoints, triples, maxTriple
 
 
 if __name__ == '__main__':
-    endpoints, triples, maxTriple = main()                
+    userEndpoints, triples, maxTriple = main()                
