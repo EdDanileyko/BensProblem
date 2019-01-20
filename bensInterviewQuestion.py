@@ -133,4 +133,4 @@ def main():
 
 
 if __name__ == '__main__':
-    userEndpoints, triples, maxTriple = main()                
+    userEndpoints, triples, maxTriple = main()              
