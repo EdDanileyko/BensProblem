@@ -17,7 +17,7 @@ from random      import choice
 from time        import sleep
 
 
-def generateLogLines(n: int):
+def generateLogLines(n: int) -> 'log line generator':
     """Returns generator yielding log lines with format:
     timestamp : user : endpoint : method : statuscode
     
@@ -46,7 +46,7 @@ def generateLogLines(n: int):
     statusCodes = (200, 400, 404, 500)
     
     for _ in range(n):
-        sleep(0.0001)
+        #sleep(0.0001)
         yield ' : '.join([newTimestamp(datetime.now()),
                           choice(users),
                           choice(endpoints),
@@ -55,6 +55,7 @@ def generateLogLines(n: int):
     yield 20
     yield 'bogus string'
 
+    
     
 def getEndpointData(log: list, *, seqlen: int, delim: str) -> tuple:
     """Passes over a log and tracks the last indicated number of endpoint
@@ -71,7 +72,9 @@ def getEndpointData(log: list, *, seqlen: int, delim: str) -> tuple:
         2. The {endpoint: visitCount} dict
         3. The tuple(three endpoints) visited the most frequently in sequence.
         
-    >>> userEndpoints, tripleCounts, maxTriple = getEndpointData(log, delim=' : ')
+    >>> userEndpoints, seqCounts, maxSeq = getEndpointData(log,
+                                                        delim=' : ',
+                                                        seqlen=3)
     """
     if not isinstance(log, (list, tuple, types.GeneratorType)):
         raise TypeError('Requires that input be sequence type to initialize')
@@ -80,7 +83,7 @@ def getEndpointData(log: list, *, seqlen: int, delim: str) -> tuple:
     if not isinstance(seqlen, int):
         raise TypeError('Must use int for length of endpoint visit sequence')
     
-    Record = namedtuple('Record',('timestamp user endpoint method statuscode'))
+    Record = namedtuple('Record', 'timestamp user endpoint method statuscode')
     userEndpoints = {}
     seqCounts  = {}
     
@@ -122,11 +125,11 @@ def getEndpointData(log: list, *, seqlen: int, delim: str) -> tuple:
 def main():
     print('Generating log lines...')
     
-    log = generateLogLines(1000)
+    log = generateLogLines(10000)
     
     print('Parsing log...')
     
-    userEndpoints, seqs, maxSeq = getEndpointData(log, seqlen=3, delim=' : ')
+    userEndpoints, seqs, maxSeq = getEndpointData(log, seqlen=4, delim=' : ')
     
     if maxSeq is None:
         print('Failure to calculate data')
