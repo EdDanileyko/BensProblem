@@ -36,8 +36,9 @@ def generateLogLines(n: int):
                    'Eric Idle', 'Terry Gilliam',
                    'Michael Palin', 'Terry Jones',
                    'Ian Davidson')
-    endpoints   = ('/', '/login', '/auth', '/home',
-                   '/account', '/logout', '/register')
+    endpoints   = ('/snakes', '/babysnakes', '/fullgrownsnakes',
+                   '/venomous', '/constrictors', '/watersnakes',
+                   '/miscsnakes')
     methods     = ('GET', 'POST', 'PUT', 'DELETE')
     statusCodes = (200, 400, 404, 500)
     
@@ -133,4 +134,4 @@ def main():
 
 
 if __name__ == '__main__':
-    userEndpoints, triples, maxTriple = main()              
+    userEndpoints, triples, maxTriple = main()                
