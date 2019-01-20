@@ -32,27 +32,13 @@ def logLineGenerator(n: int):
         
     newTimestamp = partial(datetime.strftime, format='%H:%M:%S.%f')
     
-    users = ('Graham Chapman',
-             'John Cleese',
-             'Eric Idle',
-             'Terry Gilliam',
-             'Michael Palin',
-             'Terry Jones',
-             'Ian Davidson')
-    
-    endpoints = ('/',
-                 '/login',
-                 '/auth',
-                 '/home',
-                 '/account',
-                 '/logout',
-                 '/register')
-    
-    methods = ('GET',
-               'POST',
-               'PUT',
-               'DELETE')
-    
+    users       = ('Graham Chapman', 'John Cleese',
+                   'Eric Idle', 'Terry Gilliam',
+                   'Michael Palin', 'Terry Jones',
+                   'Ian Davidson')
+    endpoints   = ('/', '/login', '/auth', '/home',
+                   '/account', '/logout', '/register')
+    methods     = ('GET', 'POST', 'PUT', 'DELETE')
     statusCodes = (200, 400, 404, 500)
     
     for _ in range(n):
