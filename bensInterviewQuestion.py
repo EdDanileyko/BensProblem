@@ -4,6 +4,9 @@ Created on Sat Jan 19 17:44:31 2019
 
 @author: edwar
 """
+import re
+import types
+
 from collections import namedtuple
 from datetime    import datetime
 from functools   import partial
@@ -16,13 +19,17 @@ def logLineGenerator(n: int):
     line to microsecond precision
     
     args:
-        int n
+        int n - number of log lines to generate
         
     >>> log = logLineGenerator(1000)
     >>> type(log)
     generator
     >>>
     """
+    if not isinstance(n, int):
+        raise TypeError('requires int(n) to initialize')
+        exit(1)
+        
     newTimestamp = partial(datetime.strftime, format='%H:%M:%S.%f')
     
     users = ('Graham Chapman',
@@ -41,16 +48,24 @@ def logLineGenerator(n: int):
                  '/logout',
                  '/register')
     
+    methods = ('GET',
+               'POST',
+               'PUT',
+               'DELETE')
+    
     for _ in range(n):
         sleep(0.0001)
         yield ' : '.join([newTimestamp(datetime.now()),
                           choice(users),
-                          choice(endpoints)])
+                          choice(endpoints),
+                          choice(methods)])
+    yield 20
 
     
-def getEndpointTriplesDictAndMaxTriple(log: list) -> tuple:
-    """Passes over a log and tracks user endpoint visits, checking the last
-    three enpoints which are visited against the master count of that endpoint.
+def getEndpointData(log: list, *, delim: str) -> tuple:
+    """Passes over a log and tracks user endpoint visits, checking the sequence
+    of three endpoints which are last visited against the master count of those
+    same three endpoints.
     
     args:
         log - log lines to process
@@ -63,15 +78,30 @@ def getEndpointTriplesDictAndMaxTriple(log: list) -> tuple:
     >>> x = getEndpointTriplesDictAndMaxTriple(log)
     >>> userEndpointTrails, endpointTripleCounts, maxEndpointTriple = x
     """
-    Record = namedtuple('Record', ('timestamp', 'user', 'endpoint'))
+    if not isinstance(log, (list, tuple, types.GeneratorType)):
+        raise TypeError('Requires that input be sequence type to initialize')
+        exit(1)
+    if not isinstance(delim, str):
+        raise TypeError('Delimiter is not a string')
+        exit(1)
+    
+    Record = namedtuple('Record', ('timestamp', 'user', 'endpoint', 'method'))
     userEndpoints = {}
     tripleCounts  = {}
     
     maxTriple = None
     
-    for line in log:
-        print(line)
-        rec = Record(*line.split(' : '))
+    isString = lambda s: isinstance(s, str)
+    canParse = lambda s: re.search(delim, s) and len(re.split(delim, s)) == 4
+    
+    for num, line in enumerate(log):
+        if not isString(line) or not canParse(line):
+            print('Cannot parse data at line {0}:\nFound {1}({2})\nIgnoring.' \
+                  .format(str(num), type(line).__name__, str(line)))
+            continue
+            
+        print('Parsing - {0}'.format(line))
+        rec = Record(*line.split(delim))
         
         if userEndpoints.get(rec.user) is None:
             userEndpoints[rec.user] = [rec.endpoint]
@@ -101,8 +131,13 @@ def main():
     
     print('Parsing log...')
     
-    endpoints, triples, maxTriple = getEndpointTriplesDictAndMaxTriple(log)
+    returnVals = getEndpointData(log, delim=' : ')
+    endpoints, triples, maxTriple = returnVals
     
+    if maxTriple is None:
+        print('Failure to parse logfile')
+        return None, None, None
+        
     print('\nCalculated {0} visits to the following endpoint sequence:' \
           .format(str(triples[maxTriple])))
     print(' -> '.join(maxTriple))
