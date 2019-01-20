@@ -7,7 +7,10 @@ Created on Sat Jan 19 17:44:31 2019
 import re
 import types
 
-from collections import namedtuple
+from collections import (
+        namedtuple,
+        deque
+)
 from datetime    import datetime
 from functools   import partial
 from random      import choice
@@ -50,15 +53,18 @@ def generateLogLines(n: int):
                           choice(methods),
                           str(choice(statusCodes))])
     yield 20
+    yield 'bogus string'
 
     
-def getEndpointData(log: list, *, delim: str) -> tuple:
-    """Passes over a log and tracks user endpoint visits, checking the sequence
-    of three endpoints which are last visited against the master count of those
-    same three endpoints.
+def getEndpointData(log: list, *, seqlen: int, delim: str) -> tuple:
+    """Passes over a log and tracks the last indicated number of endpoint
+    visits for any user, checking against the master count of those same three
+    endpoints.
     
     args:
-        log - log lines to process
+        log - log lines to process in either sequence or generator type
+        endpointseq - int(length of endpoint sequence to track)
+        delim - str(log file delimiter)    
     
     returns:
         1. The {user: [endpointLogs]} dict.
@@ -69,48 +75,48 @@ def getEndpointData(log: list, *, delim: str) -> tuple:
     """
     if not isinstance(log, (list, tuple, types.GeneratorType)):
         raise TypeError('Requires that input be sequence type to initialize')
-        exit(1)
     if not isinstance(delim, str):
         raise TypeError('Delimiter is not a string')
-        exit(1)
+    if not isinstance(seqlen, int):
+        raise TypeError('Must use int for length of endpoint visit sequence')
     
     Record = namedtuple('Record',('timestamp user endpoint method statuscode'))
     userEndpoints = {}
-    tripleCounts  = {}
+    seqCounts  = {}
     
-    maxTriple = None
+    maxSeq = None
     
     isString = lambda s: isinstance(s, str)
     canParse = lambda s: re.search(delim, s) and len(re.split(delim, s)) == 5
     
-    for num, line in enumerate(log):
+    for num, line in enumerate(log, start=1):
         if not isString(line) or not canParse(line):
             print('Cannot parse data at line {0}:\nFound {1}({2})\nIgnoring.' \
                   .format(str(num), type(line).__name__, str(line)))
             continue
             
-        print('Parsing - {0}'.format(line))
+        #print('Parsing - {0}'.format(line))
         rec = Record(*line.split(delim))
         
         if userEndpoints.get(rec.user) is None:
-            userEndpoints[rec.user] = [rec.endpoint]
+            userEndpoints[rec.user] = deque([rec.endpoint], maxlen=seqlen)
         else:
             userEndpoints[rec.user].append(rec.endpoint)
             
-        if len(userEndpoints[rec.user]) >= 3:
-            currTriple = tuple(userEndpoints[rec.user][-3:])
+        if len(userEndpoints[rec.user]) >= seqlen:
+            currSeq = tuple(userEndpoints[rec.user])
             
-            if tripleCounts.get(currTriple) is None:
-                tripleCounts[currTriple] = 1
+            if seqCounts.get(currSeq) is None:
+                seqCounts[currSeq] = 1
             else:
-                tripleCounts[currTriple] += 1
+                seqCounts[currSeq] += 1
                 
-                if maxTriple is None:
-                    maxTriple = currTriple
-                elif tripleCounts[maxTriple] < tripleCounts[currTriple]:
-                    maxTriple = currTriple
+                if maxSeq is None:
+                    maxSeq = currSeq
+                elif seqCounts[maxSeq] < seqCounts[currSeq]:
+                    maxSeq = currSeq
                 
-    return userEndpoints, tripleCounts, maxTriple
+    return userEndpoints, seqCounts, maxSeq
 
 
 def main():
@@ -120,18 +126,18 @@ def main():
     
     print('Parsing log...')
     
-    userEndpoints, triples, maxTriple = getEndpointData(log, delim=' : ')
+    userEndpoints, seqs, maxSeq = getEndpointData(log, seqlen=3, delim=' : ')
     
-    if maxTriple is None:
-        print('Failure to parse logfile')
+    if maxSeq is None:
+        print('Failure to calculate data')
         return None, None, None
         
     print('\nCalculated {0} visits to the following endpoint sequence:' \
-          .format(str(triples[maxTriple])))
-    print(' -> '.join(maxTriple))
+          .format(seqs[maxSeq]))
+    print(' -> '.join(maxSeq))
     
-    return userEndpoints, triples, maxTriple
+    return userEndpoints, seqs, maxSeq
 
 
 if __name__ == '__main__':
-    userEndpoints, triples, maxTriple = main()                
+    userEndpoints, seqs, maxSeq = main()                
