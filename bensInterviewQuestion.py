@@ -52,7 +52,16 @@ def getEndpointTriplesDictAndMaxTriple(log: list) -> tuple:
     """Passes over a log and tracks user endpoint visits, checking the last
     three enpoints which are visited against the master count of that endpoint.
     
-    returns the three endpoints visited the most frequently in sequence
+    args:
+        log - log lines to process
+    
+    returns:
+        1. The {user: [endpointLogs]} dict.
+        2. The {endpoint: visitCount} dict
+        3. The tuple(three endpoints) visited the most frequently in sequence.
+        
+    >>> x = getEndpointTriplesDictAndMaxTriple(log)
+    >>> userEndpointTrails, endpointTripleCounts, maxEndpointTriple = x
     """
     Record = namedtuple('Record', ('timestamp', 'user', 'endpoint'))
     userEndpoints = {}
