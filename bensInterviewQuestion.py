@@ -53,12 +53,15 @@ def logLineGenerator(n: int):
                'PUT',
                'DELETE')
     
+    statusCodes = (200, 400, 404, 500)
+    
     for _ in range(n):
         sleep(0.0001)
         yield ' : '.join([newTimestamp(datetime.now()),
                           choice(users),
                           choice(endpoints),
-                          choice(methods)])
+                          choice(methods),
+                          str(choice(statusCodes))])
     yield 20
 
     
@@ -85,14 +88,14 @@ def getEndpointData(log: list, *, delim: str) -> tuple:
         raise TypeError('Delimiter is not a string')
         exit(1)
     
-    Record = namedtuple('Record', ('timestamp', 'user', 'endpoint', 'method'))
+    Record = namedtuple('Record',('timestamp user endpoint method statuscode'))
     userEndpoints = {}
     tripleCounts  = {}
     
     maxTriple = None
     
     isString = lambda s: isinstance(s, str)
-    canParse = lambda s: re.search(delim, s) and len(re.split(delim, s)) == 4
+    canParse = lambda s: re.search(delim, s) and len(re.split(delim, s)) == 5
     
     for num, line in enumerate(log):
         if not isString(line) or not canParse(line):
