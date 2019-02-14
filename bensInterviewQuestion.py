@@ -90,9 +90,9 @@ def getEndpointData(log:    list, *,
     Record = namedtuple('Record', 'timestamp user endpoint method statuscode')
     
     # initialize dictionaries of {user: sequence of maxlen=seqlen}
-    # and {sequence: count of visits initialized at 1}
+    # and {sequence: count of visits initialized at 0}
     userEndpoints = defaultdict(lambda: deque(maxlen=seqlen))
-    seqCounts = defaultdict(lambda: 1)
+    seqCounts = defaultdict(int)
     maxSeq = None
     
     for num, line in enumerate(log, start=1):
