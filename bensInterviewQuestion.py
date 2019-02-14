@@ -88,25 +88,34 @@ def getEndpointData(log:    list, *,
     print('Parsing log...')
     
     Record = namedtuple('Record', 'timestamp user endpoint method statuscode')
-    userEndpoints = defaultdict(lambda: deque(maxlen=seqlen))
-    seqCounts  = defaultdict(lambda: 1)
     
+    # initialize dictionaries of {user: sequence of maxlen=seqlen}
+    # and {sequence: count of visits initialized at 1}
+    userEndpoints = defaultdict(lambda: deque(maxlen=seqlen))
+    seqCounts = defaultdict(lambda: 1)
     maxSeq = None
     
     for num, line in enumerate(log, start=1):
         print('[INFO] Parsing: {0}'.format(line))
+        
+        # Attempt to create an endpoint record
         try:
             rec = Record(*re.split(delim, line))
         except:
-            print('[WARN] Ignoring: line {0}: Found {1}({2}).' \
+            print('[WARN] Cannot process line {0}: Found {1}({2}).' \
                   .format(str(num), type(line).__name__, str(line)))
 
+        # Prepend the associated user's deque of endpoint visits
         userEndpoints[rec.user].appendleft(rec.endpoint)
-            
-        if len(userEndpoints[rec.user]) >= seqlen:
+        
+        # If the user's deque is filled, increment the count of this sequence
+        # of endpoint visits
+        if len(userEndpoints[rec.user]) == seqlen:
             currSeq = tuple(userEndpoints[rec.user])
             seqCounts[currSeq] += 1
-                
+            
+            # Check the current sequence's count of visits against the sequence
+            # with the highest number of visits and set as highest if greater
             if maxSeq is None:
                 maxSeq = currSeq
             elif seqCounts[maxSeq] < seqCounts[currSeq]:
