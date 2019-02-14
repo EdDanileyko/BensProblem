@@ -9,12 +9,13 @@ import types
 
 from collections import (
         namedtuple,
-        deque
+        deque,
+        defaultdict
 )
 from datetime    import datetime
 from functools   import partial
 from random      import choice
-from time        import sleep
+#from time        import sleep
 
 
 def generateLogLines(n: int) -> 'log line generator':
@@ -33,7 +34,9 @@ def generateLogLines(n: int) -> 'log line generator':
         raise TypeError('requires int(n) to initialize')
         exit(1)
         
-    newTimestamp = partial(datetime.strftime, format='%H:%M:%S.%f')
+    print('Generating log lines...')
+        
+    newTimestamp = partial(datetime.strftime, format='%H:%M:%S.%f3')
     
     users       = ('Graham Chapman', 'John Cleese',
                    'Eric Idle', 'Terry Gilliam',
@@ -46,7 +49,7 @@ def generateLogLines(n: int) -> 'log line generator':
     statusCodes = (200, 400, 404, 500)
     
     for _ in range(n):
-        #sleep(0.0001)
+        #sleep(0.00001)
         yield ' : '.join([newTimestamp(datetime.now()),
                           choice(users),
                           choice(endpoints),
@@ -54,10 +57,11 @@ def generateLogLines(n: int) -> 'log line generator':
                           str(choice(statusCodes))])
     yield 20
     yield 'bogus string'
-
     
     
-def getEndpointData(log: list, *, seqlen: int, delim: str) -> tuple:
+def getEndpointData(log:    list, *,
+                    seqlen: int,
+                    delim:  str) -> "userEndpoints, seqCounts, maxSeq":
     """Passes over a log and tracks the last indicated number of endpoint
     visits for any user, checking against the master count of those same three
     endpoints.
@@ -70,11 +74,9 @@ def getEndpointData(log: list, *, seqlen: int, delim: str) -> tuple:
     returns:
         1. The {user: [endpointLogs]} dict.
         2. The {endpoint: visitCount} dict
-        3. The tuple(three endpoints) visited the most frequently in sequence.
+        3. The tuple(endpoints) visited the most frequently in sequence.
         
-    >>> userEndpoints, seqCounts, maxSeq = getEndpointData(log,
-                                                        delim=' : ',
-                                                        seqlen=3)
+    >>> userEndpoints, seqCounts, maxSeq = getEndpointData(log, delim=' : ')
     """
     if not isinstance(log, (list, tuple, types.GeneratorType)):
         raise TypeError('Requires that input be sequence type to initialize')
@@ -83,64 +85,48 @@ def getEndpointData(log: list, *, seqlen: int, delim: str) -> tuple:
     if not isinstance(seqlen, int):
         raise TypeError('Must use int for length of endpoint visit sequence')
     
+    print('Parsing log...')
+    
     Record = namedtuple('Record', 'timestamp user endpoint method statuscode')
-    userEndpoints = {}
-    seqCounts  = {}
+    userEndpoints = defaultdict(lambda: deque(maxlen=seqlen))
+    seqCounts  = defaultdict(lambda: 1)
     
     maxSeq = None
     
-    isString = lambda s: isinstance(s, str)
-    canParse = lambda s: re.search(delim, s) and len(re.split(delim, s)) == 5
-    
     for num, line in enumerate(log, start=1):
-        if not isString(line) or not canParse(line):
-            print('Cannot parse data at line {0}:\nFound {1}({2})\nIgnoring.' \
+        print('[INFO] Parsing: {0}'.format(line))
+        try:
+            rec = Record(*re.split(delim, line))
+        except:
+            print('[WARN] Ignoring: line {0}: Found {1}({2}).' \
                   .format(str(num), type(line).__name__, str(line)))
-            continue
-            
-        print('Parsing - {0}'.format(line))
-        rec = Record(*line.split(delim))
-        
-        if userEndpoints.get(rec.user) is None:
-            userEndpoints[rec.user] = deque([rec.endpoint], maxlen=seqlen)
-        else:
-            userEndpoints[rec.user].append(rec.endpoint)
+
+        userEndpoints[rec.user].appendleft(rec.endpoint)
             
         if len(userEndpoints[rec.user]) >= seqlen:
             currSeq = tuple(userEndpoints[rec.user])
-            
-            if seqCounts.get(currSeq) is None:
-                seqCounts[currSeq] = 1
-            else:
-                seqCounts[currSeq] += 1
+            seqCounts[currSeq] += 1
                 
-                if maxSeq is None:
-                    maxSeq = currSeq
-                elif seqCounts[maxSeq] < seqCounts[currSeq]:
-                    maxSeq = currSeq
+            if maxSeq is None:
+                maxSeq = currSeq
+            elif seqCounts[maxSeq] < seqCounts[currSeq]:
+                maxSeq = currSeq
                 
-    return userEndpoints, seqCounts, maxSeq
-
-
-def main():
-    print('Generating log lines...')
-    
-    log = generateLogLines(10000)
-    
-    print('Parsing log...')
-    
-    userEndpoints, seqs, maxSeq = getEndpointData(log, seqlen=4, delim=' : ')
-    
     if maxSeq is None:
         print('Failure to calculate data')
         return None, None, None
         
     print('\nCalculated {0} visits to the following endpoint sequence:' \
-          .format(seqs[maxSeq]))
+          .format(seqCounts[maxSeq]))
     print(' -> '.join(maxSeq))
     
-    return userEndpoints, seqs, maxSeq
+    return userEndpoints, seqCounts, maxSeq
 
+
+def main():
+    loglines = generateLogLines(10_000)
+    return getEndpointData(loglines, seqlen=5, delim=' : ')
+    
 
 if __name__ == '__main__':
-    userEndpoints, seqs, maxSeq = main()                
+    userEndpoints, seqCounts, maxSeq = main()                
