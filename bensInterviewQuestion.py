@@ -3,6 +3,13 @@
 Created on Sat Jan 19 17:44:31 2019
 
 @author: edwar
+
+The question is:
+
+Given a timestamped log of requests, how can we
+efficiently retrieve the most visited sequence of 3
+endpoints?
+
 """
 import re
 import types
