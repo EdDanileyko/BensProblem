@@ -63,7 +63,7 @@ def getEndpointData(log:    list, *,
                     seqlen: int,
                     delim:  str) -> "userEndpoints, seqCounts, maxSeq":
     """Passes over a log and tracks the last indicated number of endpoint
-    visits for any user, checking against the master count of those same three
+    visits for any user, checking against the master count of those same n
     endpoints.
     
     args:
