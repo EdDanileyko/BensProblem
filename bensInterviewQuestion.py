@@ -64,8 +64,11 @@ def generateLogLines(n: int) -> 'log line generator':
                           str(choice(statusCodes))])
     yield 20
     yield 'bogus string'
-    
-    
+
+        
+Record = namedtuple('Record', 'timestamp user endpoint method statuscode')
+
+
 def getEndpointData(log:    list, *,
                     seqlen: int,
                     delim:  str) -> "userEndpoints, seqCounts, maxSeq":
@@ -93,8 +96,6 @@ def getEndpointData(log:    list, *,
         raise TypeError('Must use int for length of endpoint visit sequence')
     
     print('Parsing log...')
-    
-    Record = namedtuple('Record', 'timestamp user endpoint method statuscode')
     
     # initialize dictionaries of {user: sequence of maxlen=seqlen}
     # and {sequence: count of visits initialized at 0}
